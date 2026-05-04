@@ -30,7 +30,7 @@ Pick one provider and get an API key from their platform:
 | Provider | Model used | Get a key |
 |---|---|---|
 | **Anthropic** | `claude-sonnet-4-6` | [console.anthropic.com](https://console.anthropic.com) |
-| **Google Gemini** | `gemini-2.0-flash` | [aistudio.google.com](https://aistudio.google.com) |
+| **Google Gemini** | `gemini-1.5-flash` | [aistudio.google.com](https://aistudio.google.com) |
 | **OpenAI** | `gpt-4o-mini` | [platform.openai.com](https://platform.openai.com) |
 | **Groq** | `llama-3.3-70b-versatile` | [console.groq.com](https://console.groq.com) |
 
