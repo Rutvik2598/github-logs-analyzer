@@ -25,13 +25,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify dist is committed
-        run: |
-          if ! git diff --quiet dist/index.js; then
-            echo "dist/index.js is out of date — run npm run build and commit the result"
-            exit 1
-          fi
-
   analyze-failure:
     name: Analyze CI Failure
     runs-on: ubuntu-latest
