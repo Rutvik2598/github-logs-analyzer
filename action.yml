@@ -1,0 +1,39 @@
+name: 'GitHub Logs Analyzer'
+description: 'AI-powered GitHub Actions failure analyzer'
+author: 'github-logs-analyzer'
+
+inputs:
+  provider:
+    description: 'AI provider: "anthropic", "gemini", "openai", or "groq"'
+    required: false
+    default: 'anthropic'
+  anthropic-api-key:
+    description: 'Anthropic API key — required when provider is "anthropic"'
+    required: false
+  gemini-api-key:
+    description: 'Google Gemini API key — required when provider is "gemini"'
+    required: false
+  openai-api-key:
+    description: 'OpenAI API key — required when provider is "openai"'
+    required: false
+  groq-api-key:
+    description: 'Groq API key — required when provider is "groq"'
+    required: false
+  github-token:
+    description: 'GitHub token for reading logs and posting comments'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  summary:
+    description: 'One-line summary of the failure'
+  root-cause:
+    description: 'Root cause of the failure'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'search'
+  color: 'red'
