@@ -37461,7 +37461,7 @@ async function run() {
     core.setOutput('summary', analysis.summary);
     core.setOutput('root-cause', analysis.rootCause);
     core.info(`Analysis complete: ${analysis.summary}`);
-    await (0, reporter_1.postReport)(githubToken, context, analysis, failedJobs.map(j => j.name));
+    await (0, reporter_1.postReport)(githubToken, context, analysis, failedJobs.map(j => j.name), provider);
     core.info('Report posted');
 }
 run().catch(core.setFailed);
@@ -37512,13 +37512,21 @@ exports.postReport = postReport;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const COMMENT_MARKER = '<!-- github-logs-analyzer -->';
-async function postReport(token, context, analysis, failedJobNames) {
+const PROVIDER_LABEL = {
+    anthropic: 'Claude (Anthropic)',
+    gemini: 'Gemini (Google)',
+    openai: 'GPT-4o mini (OpenAI)',
+    groq: 'Llama 3.3 (Groq)',
+};
+async function postReport(token, context, analysis, failedJobNames, provider) {
     await Promise.all([
-        writeJobSummary(context, analysis, failedJobNames),
-        context.prNumber ? postPrComment(token, context, analysis, failedJobNames) : Promise.resolve(),
+        writeJobSummary(context, analysis, failedJobNames, provider),
+        context.prNumber
+            ? postPrComment(token, context, analysis, failedJobNames, provider)
+            : Promise.resolve(),
     ]);
 }
-async function writeJobSummary(context, analysis, failedJobNames) {
+async function writeJobSummary(context, analysis, failedJobNames, provider) {
     await core.summary
         .addHeading('CI Failure Analysis', 2)
         .addRaw(`> ${analysis.summary}\n\n`)
@@ -37531,12 +37539,12 @@ async function writeJobSummary(context, analysis, failedJobNames) {
         .addList(analysis.failedSteps.length > 0 ? analysis.failedSteps.map(s => `\`${s}\``) : ['See logs for details'])
         .addHeading('Suggested Fix', 3)
         .addRaw(`${analysis.fixSuggestion}\n\n`)
-        .addRaw(`<sub>[View full logs](${context.runUrl})</sub>`)
+        .addRaw(`<sub>Analyzed by ${PROVIDER_LABEL[provider]} • [View full logs](${context.runUrl})</sub>`)
         .write();
 }
-async function postPrComment(token, context, analysis, failedJobNames) {
+async function postPrComment(token, context, analysis, failedJobNames, provider) {
     const octokit = github.getOctokit(token);
-    const body = formatComment(context, analysis, failedJobNames);
+    const body = formatComment(context, analysis, failedJobNames, provider);
     const { data: comments } = await octokit.rest.issues.listComments({
         owner: context.owner,
         repo: context.repo,
@@ -37560,7 +37568,7 @@ async function postPrComment(token, context, analysis, failedJobNames) {
         });
     }
 }
-function formatComment(context, analysis, failedJobNames) {
+function formatComment(context, analysis, failedJobNames, provider) {
     const steps = analysis.failedSteps.length > 0
         ? analysis.failedSteps.map(s => `- \`${s}\``).join('\n')
         : '- See logs for details';
@@ -37582,7 +37590,7 @@ ${steps}
 ### Suggested Fix
 ${analysis.fixSuggestion}
 
-<sub>Analyzed by [GitHub Logs Analyzer](${context.runUrl}) • commit \`${context.sha.slice(0, 7)}\`</sub>`;
+<sub>Analyzed by ${PROVIDER_LABEL[provider]} • commit \`${context.sha.slice(0, 7)}\` • [View full logs](${context.runUrl})</sub>`;
 }
 
 
