@@ -1,4 +1,1 @@
 node_modules/
-dist/*.map
-dist/sourcemap-register.js
-dist/licenses.txt

@@ -4,7 +4,7 @@
   "description": "AI-powered GitHub Actions failure analyzer using Claude",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt",
+    "build": "ncc build src/index.ts -o dist",
     "dev": "ts-node src/index.ts",
     "typecheck": "tsc --noEmit"
   },
