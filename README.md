@@ -70,7 +70,7 @@ jobs:
       actions: read
       pull-requests: write
     steps:
-      - uses: your-org/github-logs-analyzer@v1
+      - uses: Rutvik2598/github-logs-analyzer@v1.0.0
         with:
           provider: gemini                                    # or anthropic, openai, groq
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}      # match the secret to your provider
