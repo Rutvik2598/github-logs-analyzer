@@ -2,25 +2,37 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import type { Analysis } from './analyzer'
 import type { WorkflowContext } from './github'
+import type { Provider } from './analyzer'
 
 const COMMENT_MARKER = '<!-- github-logs-analyzer -->'
+
+const PROVIDER_LABEL: Record<Provider, string> = {
+  anthropic: 'Claude (Anthropic)',
+  gemini:    'Gemini (Google)',
+  openai:    'GPT-4o mini (OpenAI)',
+  groq:      'Llama 3.3 (Groq)',
+}
 
 export async function postReport(
   token: string,
   context: WorkflowContext,
   analysis: Analysis,
-  failedJobNames: string[]
+  failedJobNames: string[],
+  provider: Provider
 ): Promise<void> {
   await Promise.all([
-    writeJobSummary(context, analysis, failedJobNames),
-    context.prNumber ? postPrComment(token, context, analysis, failedJobNames) : Promise.resolve(),
+    writeJobSummary(context, analysis, failedJobNames, provider),
+    context.prNumber
+      ? postPrComment(token, context, analysis, failedJobNames, provider)
+      : Promise.resolve(),
   ])
 }
 
 async function writeJobSummary(
   context: WorkflowContext,
   analysis: Analysis,
-  failedJobNames: string[]
+  failedJobNames: string[],
+  provider: Provider
 ): Promise<void> {
   await core.summary
     .addHeading('CI Failure Analysis', 2)
@@ -34,7 +46,7 @@ async function writeJobSummary(
     .addList(analysis.failedSteps.length > 0 ? analysis.failedSteps.map(s => `\`${s}\``) : ['See logs for details'])
     .addHeading('Suggested Fix', 3)
     .addRaw(`${analysis.fixSuggestion}\n\n`)
-    .addRaw(`<sub>[View full logs](${context.runUrl})</sub>`)
+    .addRaw(`<sub>Analyzed by ${PROVIDER_LABEL[provider]} • [View full logs](${context.runUrl})</sub>`)
     .write()
 }
 
@@ -42,10 +54,11 @@ async function postPrComment(
   token: string,
   context: WorkflowContext,
   analysis: Analysis,
-  failedJobNames: string[]
+  failedJobNames: string[],
+  provider: Provider
 ): Promise<void> {
   const octokit = github.getOctokit(token)
-  const body = formatComment(context, analysis, failedJobNames)
+  const body = formatComment(context, analysis, failedJobNames, provider)
 
   const { data: comments } = await octokit.rest.issues.listComments({
     owner: context.owner,
@@ -75,7 +88,8 @@ async function postPrComment(
 function formatComment(
   context: WorkflowContext,
   analysis: Analysis,
-  failedJobNames: string[]
+  failedJobNames: string[],
+  provider: Provider
 ): string {
   const steps =
     analysis.failedSteps.length > 0
@@ -100,5 +114,5 @@ ${steps}
 ### Suggested Fix
 ${analysis.fixSuggestion}
 
-<sub>Analyzed by [GitHub Logs Analyzer](${context.runUrl}) • commit \`${context.sha.slice(0, 7)}\`</sub>`
+<sub>Analyzed by ${PROVIDER_LABEL[provider]} • commit \`${context.sha.slice(0, 7)}\` • [View full logs](${context.runUrl})</sub>`
 }

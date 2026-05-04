@@ -38,7 +38,7 @@ async function run(): Promise<void> {
   core.setOutput('root-cause', analysis.rootCause)
   core.info(`Analysis complete: ${analysis.summary}`)
 
-  await postReport(githubToken, context, analysis, failedJobs.map(j => j.name))
+  await postReport(githubToken, context, analysis, failedJobs.map(j => j.name), provider)
   core.info('Report posted')
 }
 
